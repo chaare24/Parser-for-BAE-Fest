@@ -12,6 +12,8 @@ print(files)
 
 listOfWords = []
 
+# Retrieve text from text files only
+# Return list of words from 
 def getListOfWords(fileName):
     tempListOfWords = []
     file = open(fileName, "r")
@@ -19,29 +21,51 @@ def getListOfWords(fileName):
     tempListOfWords.extend(text)
     
     for word in tempListOfWords:
-        listOfWords.append(word.strip())
+        listOfWords.append(word.strip().lower())
     
     print(listOfWords)
 
-# Able to retrieve text from the Word Documents only
+# Retrieve text from the Word Documents only
+# Returns list, the filename [0] and the contents [1]
 def getTextFromDocFiles(fileName):
     doc = docx.Document(fileName)
     fullText = []
     changedText = []
+    results = []
     for paragraph in doc.paragraphs:
         fullText.append(paragraph.text)
     for line in fullText: 
         line.strip()
         if line == '' or line.strip() == '':
             continue
-        changedText.append(line.strip())
+        changedText.append(line.strip().lower())
+    
+    results.append(fileName)
+    results.append(changedText)
 
-    HTMLParser(changedText)
+    #print(changedText)
+    return results
 
-    return '\n'.join(fullText)
+# Still need to do text from text files only
+def getTextFromTextFiles(fileName):
+    txt = open(fileName, "r")
+    changedText = []
+    results = []
+    lines = txt.readlines()
+    for line in lines: 
+        line.strip()
+        if line == '' or line.strip() == '':
+            continue
+        changedText.append(line.strip().lower())
+    
+    results.append(fileName)
+    results.append(changedText)
+
+    #print(changedText)
+    return results
 
 # HTML Validator
-# Should return the line number, line if false
+# Should return the line number, line if false, need a counter to how many times it's false, if over 10 then don't output rest
 def HTMLParser(text):
     for line in text:
         if (line == '' or line == '\n'):
@@ -50,7 +74,46 @@ def HTMLParser(text):
             print(bool (BeautifulSoup(line, "html.parser").find()))
             print(line)
 
-#getTextFromDocFiles(files[3])
-#getTextFromTextFiles(files[0])
-x = str(sys.argv[1])
-getListOfWords(x)
+# Checks if the line contains the words
+# Returns list, the filename [0] and the contents that contain the words [1]
+def checkWords(text):
+    results = []
+    linesWithBadWords = []
+    
+    for line in text[1]:
+        if any(word in line for word in listOfWords):
+            linesWithBadWords.append(line)
+
+    results.append(text[0])
+    results.append(linesWithBadWords)
+
+    return results
+
+def main(): 
+    # gets argument from the command line, pass in the text file
+    getListOfWords(str(sys.argv[1]))
+
+    for fN in files:
+    # check for file name extensions, store in list and evaluate 
+        if (fN == sys.argv[1]): continue
+        if fN.endswith('.docx') or fN.endswith('.doc'):
+            fileInfoDoc = getTextFromDocFiles(files[1])
+            resultsDoc = checkWords(fileInfoDoc)
+            print(resultsDoc)
+        else:
+            fileInfoTxt = getTextFromTextFiles(fN)
+            resultsTxt = checkWords(fileInfoTxt)
+
+    
+    #createDoc for HTML problems 
+
+    #createDoc for words
+    
+    
+
+main()
+
+
+
+
+
