@@ -2,6 +2,7 @@
 from os import listdir 
 from os.path import isfile, join
 import docx
+from docx import Document
 import sys
 import re
 from bs4 import BeautifulSoup
@@ -102,17 +103,41 @@ def checkWords(text):
 def is_phrase_in(phrase, text):
     return re.search(r"\b{}\b".format(phrase), text, re.IGNORECASE) is not None
 
+def doc(document, results):
+    if len(results[1]) == 0: return
+    p = document.add_paragraph('Title: ')
+    p.add_run(results[0]).bold = True
+
+    for line in results[1]:
+        p = document.add_paragraph(line, style = 'List Bullet')
+        for word in listOfWords:
+            if (line.find(word) != -1):
+                p.add_run(" ")
+                p.add_run(word).bold = True
+
+            
+    
+
 def main(): 
     # gets argument from the command line, pass in the text file
-    getListOfWords(str(sys.argv[1]))
+
+    docWords = Document()
+    docHTML = Document()
+    docWords.add_heading('Stories Containing Bad Words', 0)
+    docHTML.add_heading('Stories with Bad HTML', 0)
+    
+    for findList in files:
+        if findList == "listOfWords.txt":
+            getListOfWords(findList)
 
     for fN in files:
     # check for file name extensions, store in list and evaluate 
-        if (fN == sys.argv[1]): continue
+        if (fN == "listOfWords.txt" or fN == "results.docx" or fN.startswith('~')): continue
         if fN.endswith('.docx') or fN.endswith('.doc'):
-            fileInfoDoc = getTextFromDocFiles(files[1])
+            fileInfoDoc = getTextFromDocFiles(fN)
             resultsHTMLDoc = HTMLParser(fileInfoDoc[1])
             resultsDoc = checkWords(fileInfoDoc)
+            doc(docWords, resultsDoc)
             
         elif fN.endswith('.txt'):
             fileInfoTxt = getTextFromTextFiles(fN)
@@ -121,7 +146,8 @@ def main():
         else:
             continue
 
-    print(resultsTxt)
+    print(resultsDoc)
+    docWords.save('results.docx')
     #createDoc for HTML problems 
 
     #createDoc for words
