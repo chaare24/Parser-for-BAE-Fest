@@ -1,0 +1,6 @@
+I just wanted to say
+
+this is not html
+
+so should
+not pass at all

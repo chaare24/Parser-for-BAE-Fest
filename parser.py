@@ -19,7 +19,6 @@ def getListOfWords(fileName):
     file = open(fileName, "r")
     text = file.readlines()
     tempListOfWords.extend(text)
-    
     for word in tempListOfWords:
         listOfWords.append(word.strip().lower())
     
@@ -67,12 +66,17 @@ def getTextFromTextFiles(fileName):
 # HTML Validator
 # Should return the line number, line if false, need a counter to how many times it's false, if over 10 then don't output rest
 def HTMLParser(text):
+    counter = 0
+    falseList = []
     for line in text:
         if (line == '' or line == '\n'):
             continue
         if (bool (BeautifulSoup(line, "html.parser").find()) == False):
-            print(bool (BeautifulSoup(line, "html.parser").find()))
-            print(line)
+            falseList.append(line)
+            counter = counter + 1
+            if (counter == 7):
+                return falseList
+        
 
 # Checks if the line contains the words
 # Returns list, the filename [0] and the contents that contain the words [1]
@@ -80,14 +84,23 @@ def checkWords(text):
     results = []
     linesWithBadWords = []
     
+    # for line in text[1]:
+    #     if any(word in line for word in listOfWords):
+    #         linesWithBadWords.append(line)
+    flag = False
     for line in text[1]:
-        if any(word in line for word in listOfWords):
-            linesWithBadWords.append(line)
+        flag = False
+        for word in listOfWords:
+            if (is_phrase_in(word, line) == True and flag == False):
+                linesWithBadWords.append(line)
+                flag = True
 
     results.append(text[0])
     results.append(linesWithBadWords)
-
     return results
+
+def is_phrase_in(phrase, text):
+    return re.search(r"\b{}\b".format(phrase), text, re.IGNORECASE) is not None
 
 def main(): 
     # gets argument from the command line, pass in the text file
@@ -98,13 +111,17 @@ def main():
         if (fN == sys.argv[1]): continue
         if fN.endswith('.docx') or fN.endswith('.doc'):
             fileInfoDoc = getTextFromDocFiles(files[1])
+            resultsHTMLDoc = HTMLParser(fileInfoDoc[1])
             resultsDoc = checkWords(fileInfoDoc)
-            print(resultsDoc)
-        else:
+            
+        elif fN.endswith('.txt'):
             fileInfoTxt = getTextFromTextFiles(fN)
+            resultsHTMLTxt = HTMLParser(fileInfoTxt[1])
             resultsTxt = checkWords(fileInfoTxt)
+        else:
+            continue
 
-    
+    print(resultsTxt)
     #createDoc for HTML problems 
 
     #createDoc for words
