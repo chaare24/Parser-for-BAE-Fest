@@ -75,9 +75,9 @@ def HTMLParser(text):
         if (bool (BeautifulSoup(line, "html.parser").find()) == False):
             falseList.append(line)
             counter = counter + 1
-            if (counter == 7):
+            if (counter == 5):
                 return falseList
-        
+    return falseList
 
 # Checks if the line contains the words
 # Returns list, the filename [0] and the contents that contain the words [1]
@@ -103,20 +103,34 @@ def checkWords(text):
 def is_phrase_in(phrase, text):
     return re.search(r"\b{}\b".format(phrase), text, re.IGNORECASE) is not None
 
-def doc(document, results):
+def docForText(document, results):
     if len(results[1]) == 0: return
     p = document.add_paragraph('Title: ')
     p.add_run(results[0]).bold = True
 
+    counter = 0
     for line in results[1]:
         p = document.add_paragraph(line, style = 'List Bullet')
+        counter = 0
         for word in listOfWords:
             if (line.find(word) != -1):
-                p.add_run(" ")
-                p.add_run(word).bold = True
+                if (counter == 0):
+                    p.add_run(" ")
+                    p.add_run(word).bold = True
+                    counter = counter + 1
+                else: 
+                    p.add_run(", ")
+                    p.add_run(word).bold = True
+                    counter = counter + 1
+                    
+def docForHTML(document, fN, results):
 
-            
-    
+    p = document.add_paragraph('Title: ')
+    p.add_run(fN).bold = True
+
+    for line in results:
+        document.add_paragraph(line, style = 'List Bullet')
+
 
 def main(): 
     # gets argument from the command line, pass in the text file
@@ -125,6 +139,7 @@ def main():
     docHTML = Document()
     docWords.add_heading('Stories Containing Bad Words', 0)
     docHTML.add_heading('Stories with Bad HTML', 0)
+    docHTML.add_paragraph('At most, 5 examples')
     
     for findList in files:
         if findList == "listOfWords.txt":
@@ -132,27 +147,28 @@ def main():
 
     for fN in files:
     # check for file name extensions, store in list and evaluate 
-        if (fN == "listOfWords.txt" or fN == "results.docx" or fN.startswith('~')): continue
+        if (fN == "listOfWords.txt" 
+            or fN == "resultsWords.docx" 
+            or fN == "resultsHTML.docx" 
+            or fN.startswith('~')): continue
         if fN.endswith('.docx') or fN.endswith('.doc'):
             fileInfoDoc = getTextFromDocFiles(fN)
             resultsHTMLDoc = HTMLParser(fileInfoDoc[1])
             resultsDoc = checkWords(fileInfoDoc)
-            doc(docWords, resultsDoc)
+            docForText(docWords, resultsDoc)
+            docForHTML(docHTML, resultsDoc[0], resultsHTMLDoc)
             
         elif fN.endswith('.txt'):
             fileInfoTxt = getTextFromTextFiles(fN)
-            resultsHTMLTxt = HTMLParser(fileInfoTxt[1])
+            # resultsHTMLTxt = HTMLParser(fileInfoTxt[1]) this doesn't work for some reason
             resultsTxt = checkWords(fileInfoTxt)
+            docForText(docWords, resultsTxt)
+        
         else:
             continue
 
-    print(resultsDoc)
-    docWords.save('results.docx')
-    #createDoc for HTML problems 
-
-    #createDoc for words
-    
-    
+    docWords.save('resultsWords.docx')    
+    docHTML.save('resultsHTML.docx')  
 
 main()
 
